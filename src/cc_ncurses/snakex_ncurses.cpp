@@ -38,12 +38,12 @@ void draw(const proto::entry_t &e) {
     } else if (std::holds_alternative<clear_t>(e)) {
         const auto v = std::get<clear_t>(e);
         nprint(v.x, v.y, " ");
-    } else if (std::holds_alternative<screen_t>(e)) {
-        const auto v = std::get<screen_t>(e);
-        if (v.x != size_x || v.y != size_y)
+    } else if (std::holds_alternative<setup_t>(e)) {
+        const auto v = std::get<setup_t>(e);
+        if (v.wx != size_x || v.wy != size_y)
             fatal("screen:(%d,%d) doesn't match game_screen:(%d,%d)\n",
-                    size_x, size_y, v.x, v.y);
-        draw_border(v.x, v.y);
+                    size_x, size_y, v.wx, v.wy);
+        draw_border(v.wx, v.wy);
     }
 }
 

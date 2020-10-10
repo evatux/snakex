@@ -66,7 +66,7 @@ proto::message_t game_t::generate_loots(int num_loots) {
 
 proto::message_t game_t::state_message() const {
     proto::message_t message;
-    message.emplace_back(proto::screen_t{size_.x, size_.y});
+    message.emplace_back(proto::setup_t{size_.x, size_.y});
 
     for (int id = 0; id < (int)players_.size(); ++id) {
         const auto &snake = players_[id].snake;
