@@ -50,9 +50,8 @@ struct snake_t {
         assert(new_head_direction.is_direction());
         head_direction_ = new_head_direction;
     }
-    void step(const pos_t &direction, bool grow) {
-        assert(direction.is_direction());
-        body_.push_front(head() + direction);
+    void step(const pos_t &target, bool grow) {
+        body_.push_front(target);
         if (!grow) body_.pop_back();
     }
 
@@ -74,7 +73,7 @@ struct game_t {
         int score;
     };
 
-    game_t(const pos_t size, int num_players): size_(size) {
+    game_t(const pos_t &size, int num_players): size_(size) {
         generate_players(num_players);
         generate_loots(num_loots_on_board);
     }
@@ -97,6 +96,7 @@ struct game_t {
 
 private:
     pos_t size_;
+    bool with_mirror_ = true;
 
     std::vector<player_t> players_;
     std::list<loot_t> loots_;
@@ -106,6 +106,9 @@ private:
     proto::message_t generate_loots(int num_loots);
 
     proto::message_t remove_player(int id);
+
+    pos_t maybe_mirror(const pos_t &pos) const;
+    bool check_pos_inside(const pos_t &pos) const;
 };
 
 } // namespace core

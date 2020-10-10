@@ -130,9 +130,16 @@ proto::message_t game_t::step() {
 
         auto &snake = player.snake;
         const pos_t dir = snake.head_direction();
-        const pos_t target = snake.head() + dir;
+        const pos_t target = maybe_mirror(snake.head() + dir);
 
         bool stop = false;
+
+        // check out of bounds
+        if (!check_pos_inside(target)) {
+            proto::concatenate(message, remove_player(id));
+            stop = true;
+        }
+        if (stop) continue;
 
         // check for loot
         auto loot = std::find_if(loots_.begin(), loots_.end(),
@@ -141,11 +148,11 @@ proto::message_t game_t::step() {
             pos_t p = snake.head();
             message.emplace_back(proto::snake_t{
                     id, proto::snake_part_t::BODY, p.x, p.y});
-            p += dir;
+            p = target;
             message.emplace_back(proto::snake_t{
                     id, proto::snake_part_t::HEAD, p.x, p.y, to_proto(dir)});
 
-            snake.step(dir, true);
+            snake.step(target, true);
             player.score += 1;
             num_loots_ate += 1;
             loots_.erase(loot);
@@ -168,19 +175,36 @@ proto::message_t game_t::step() {
             pos_t p = snake.head();
             message.emplace_back(proto::snake_t{
                     id, proto::snake_part_t::BODY, p.x, p.y});
-            p += dir;
+            p = target;
             message.emplace_back(proto::snake_t{
                     id, proto::snake_part_t::HEAD, p.x, p.y, to_proto(dir)});
             p = snake.tail();
             message.emplace_back(proto::clear_t{p.x, p.y});
 
-            snake.step(dir, false);
+            snake.step(target, false);
         }
     }
 
     proto::concatenate(message, generate_loots(num_loots_ate));
 
     return message;
+}
+
+pos_t game_t::maybe_mirror(const pos_t &pos) const {
+    if (with_mirror_ == false) return pos;
+
+    pos_t res = pos;
+    if (res.x < 0) res.x += size_.x;
+    if (res.x >= size_.x) res.x -= size_.x;
+    if (res.y < 0) res.y += size_.y;
+    if (res.y >= size_.y) res.y -= size_.y;
+
+    return res;
+}
+
+bool game_t::check_pos_inside(const pos_t &pos) const {
+    if (with_mirror_) return true;
+    return pos.x >= 0 && pos.x < size_.x && pos.y >= 0 && pos.y < size_.y;
 }
 
 } // namespace core
