@@ -122,7 +122,7 @@ proto::message_t game_t::remove_player(int id) {
 proto::message_t game_t::step() {
     proto::message_t message;
 
-    int num_loots = num_loots_on_board;
+    int num_loots_ate = 0;
 
     for (int id = 0; id < num_players(); ++id) {
         auto &player = players_[id];
@@ -147,7 +147,7 @@ proto::message_t game_t::step() {
 
             snake.step(dir, true);
             player.score += 1;
-            num_loots -= 1;
+            num_loots_ate += 1;
             loots_.erase(loot);
             stop = true;
         }
@@ -178,7 +178,7 @@ proto::message_t game_t::step() {
         }
     }
 
-    proto::concatenate(message, generate_loots(num_loots));
+    proto::concatenate(message, generate_loots(num_loots_ate));
 
     return message;
 }

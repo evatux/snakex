@@ -34,7 +34,7 @@ struct snake_t {
     int length() const { return (int)body_.size(); }
 
     const pos_t &head() const { assert(!body_.empty()); return *body_.begin(); }
-    const pos_t &tail() const { assert(!body_.empty()); return *body_.end(); }
+    const pos_t &tail() const { assert(!body_.empty()); return *body_.rbegin(); }
     const pos_t &head_direction() const { return head_direction_; }
 
     std::list<pos_t>::const_iterator begin() const { return body_.cbegin(); }
