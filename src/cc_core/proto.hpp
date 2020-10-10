@@ -14,12 +14,13 @@ enum class dir_t: char { UNDEF = '\0', UP = 'U', RIGHT = 'R', DOWN = 'D', LEFT =
 
 // entries
 struct setup_t { int wx, wy; };
+struct score_change_t { int id; int score; };
 struct snake_t { int id; snake_part_t part; int x, y; dir_t dir = dir_t::UNDEF; };
 struct loot_t { int id; int x, y; };
 struct clear_t { int x, y; };
 
 // entry and message
-using entry_t = std::variant<snake_t, loot_t, clear_t, setup_t>;
+using entry_t = std::variant<snake_t, loot_t, clear_t, setup_t, score_change_t>;
 using message_t = std::vector<entry_t>;
 
 inline message_t &concatenate(message_t &self, message_t &&rhs) {

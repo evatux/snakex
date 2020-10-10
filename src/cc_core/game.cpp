@@ -69,6 +69,8 @@ proto::message_t game_t::state_message() const {
     message.emplace_back(proto::setup_t{size_.x, size_.y});
 
     for (int id = 0; id < (int)players_.size(); ++id) {
+        message.emplace_back(proto::score_change_t{id, 0});
+
         const auto &snake = players_[id].snake;
         auto it = snake.begin();
         // head
@@ -113,7 +115,9 @@ proto::message_t game_t::remove_player(int id) {
 
     assert(players_[id].is_active == true);
     players_[id].is_active = false;
+    players_[id].score *= -1;
 
+    message.emplace_back(proto::score_change_t{id, players_[id].score});
     for (const auto &b: players_[id].snake)
         message.emplace_back(proto::clear_t{b.x, b.y});
     return message;
@@ -132,56 +136,58 @@ proto::message_t game_t::step() {
         const pos_t dir = snake.head_direction();
         const pos_t target = maybe_mirror(snake.head() + dir);
 
-        bool stop = false;
+        enum { PROCESSING, STEP, GROW, DIE } state = PROCESSING;
 
         // check out of bounds
-        if (!check_pos_inside(target)) {
-            proto::concatenate(message, remove_player(id));
-            stop = true;
+        if (state == PROCESSING) {
+            if (!check_pos_inside(target)) state = DIE;
         }
-        if (stop) continue;
 
         // check for loot
-        auto loot = std::find_if(loots_.begin(), loots_.end(),
-                [&](const loot_t &loot) { return loot.pos == target; });
-        if (loot != loots_.end()) {
-            pos_t p = snake.head();
-            message.emplace_back(proto::snake_t{
-                    id, proto::snake_part_t::BODY, p.x, p.y});
-            p = target;
-            message.emplace_back(proto::snake_t{
-                    id, proto::snake_part_t::HEAD, p.x, p.y, to_proto(dir)});
-
-            snake.step(target, true);
-            player.score += 1;
-            num_loots_ate += 1;
-            loots_.erase(loot);
-            stop = true;
+        if (state == PROCESSING) {
+            auto loot = std::find_if(loots_.begin(), loots_.end(),
+                    [&](const loot_t &loot) { return loot.pos == target; });
+            if (loot != loots_.end()) {
+                state = GROW;
+                num_loots_ate += 1;
+                loots_.erase(loot);
+            }
         }
-        if (stop) continue;
 
         // check for collision
-        for (const auto &other_player: players_) {
-            if (other_player.snake.contains(target)) {
-                proto::concatenate(message, remove_player(id));
-                stop = true;
+        if (state == PROCESSING) {
+            for (const auto &other_player: players_) {
+                if (other_player.snake.contains(target)) state = DIE;
+                if (state != PROCESSING) break;
             }
-            if (stop) break;
         }
-        if (stop) continue;
 
         // oK to step
-        {
-            pos_t p = snake.head();
-            message.emplace_back(proto::snake_t{
-                    id, proto::snake_part_t::BODY, p.x, p.y});
-            p = target;
-            message.emplace_back(proto::snake_t{
-                    id, proto::snake_part_t::HEAD, p.x, p.y, to_proto(dir)});
-            p = snake.tail();
-            message.emplace_back(proto::clear_t{p.x, p.y});
+        if (state == PROCESSING) state = STEP;
 
-            snake.step(target, false);
+        assert(state != PROCESSING);
+
+        // action: STEP, GROW, or DIE
+        switch (state) {
+            case STEP: case GROW: {
+                pos_t p = snake.head();
+                message.emplace_back(proto::snake_t{
+                        id, proto::snake_part_t::BODY, p.x, p.y});
+                p = target;
+                message.emplace_back(proto::snake_t{
+                        id, proto::snake_part_t::HEAD, p.x, p.y, to_proto(dir)});
+                if (state == STEP) {
+                    p = snake.tail();
+                    message.emplace_back(proto::clear_t{p.x, p.y});
+                }
+
+                snake.step(target, state == GROW);
+            }
+            break;
+            case DIE:
+                proto::concatenate(message, remove_player(id));
+                break;
+            default: assert(!"unexpected state");
         }
     }
 
