@@ -81,9 +81,16 @@ struct game_t {
     proto::message_t state_message() const;
 
     const pos_t &size() const { return size_; }
+    const bool is_finished() const { return is_finished_; }
 
     const std::vector<player_t> &players() const { return players_; }
     bool is_player_active(int id) const { return players()[id].is_active; }
+    int num_active_players() const {
+        int res = 0;
+        for (int id = 0; id < num_players(); ++id)
+            res += is_player_active(id);
+        return res;
+    }
     int num_players() const { return (int)players_.size(); }
 
     const std::list<loot_t> &loots() const { return loots_; }
@@ -102,10 +109,13 @@ private:
     std::list<loot_t> loots_;
     const int num_loots_on_board = 1;
 
+    bool is_finished_ = false;
+
     void generate_players(int num_players);
     proto::message_t generate_loots(int num_loots);
 
     proto::message_t remove_player(int id);
+    proto::message_t score_message() const;
 
     pos_t maybe_mirror(const pos_t &pos) const;
     bool check_pos_inside(const pos_t &pos) const;

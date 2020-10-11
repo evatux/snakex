@@ -68,9 +68,9 @@ proto::message_t game_t::state_message() const {
     proto::message_t message;
     message.emplace_back(proto::setup_t{size_.x, size_.y});
 
-    for (int id = 0; id < (int)players_.size(); ++id) {
-        message.emplace_back(proto::score_change_t{id, 0});
+    proto::concatenate(message, score_message());
 
+    for (int id = 0; id < (int)players_.size(); ++id) {
         const auto &snake = players_[id].snake;
         auto it = snake.begin();
         // head
@@ -90,6 +90,13 @@ proto::message_t game_t::state_message() const {
     for (const auto &loot: loots_)
         message.emplace_back(proto::loot_t{(int)loot.type, loot.pos.x, loot.pos.y});
 
+    return message;
+}
+
+proto::message_t game_t::score_message() const {
+    proto::message_t message;
+    for (int id = 0; id < (int)players_.size(); ++id)
+        message.emplace_back(proto::score_change_t{id, players_[id].score});
     return message;
 }
 
@@ -125,6 +132,7 @@ proto::message_t game_t::remove_player(int id) {
 
 proto::message_t game_t::step() {
     proto::message_t message;
+    if (is_finished()) return message;
 
     int num_loots_ate = 0;
 
@@ -156,8 +164,13 @@ proto::message_t game_t::step() {
 
         // check for collision
         if (state == PROCESSING) {
-            for (const auto &other_player: players_) {
-                if (other_player.snake.contains(target)) state = DIE;
+            for (int other_id = 0; other_id < num_players(); ++other_id) {
+                const auto &other_player = players_[other_id];
+                if (other_player.snake.contains(target)) {
+                    if (other_id == id && target == snake.tail())
+                        continue;
+                    state = DIE;
+                }
                 if (state != PROCESSING) break;
             }
         }
@@ -165,21 +178,23 @@ proto::message_t game_t::step() {
         // oK to step
         if (state == PROCESSING) state = STEP;
 
-        assert(state != PROCESSING);
-
         // action: STEP, GROW, or DIE
         switch (state) {
             case STEP: case GROW: {
                 pos_t p = snake.head();
                 message.emplace_back(proto::snake_t{
                         id, proto::snake_part_t::BODY, p.x, p.y});
-                p = target;
-                message.emplace_back(proto::snake_t{
-                        id, proto::snake_part_t::HEAD, p.x, p.y, to_proto(dir)});
                 if (state == STEP) {
                     p = snake.tail();
                     message.emplace_back(proto::clear_t{p.x, p.y});
+                } else {
+                    player.score += 1;
+                    message.emplace_back(
+                            proto::score_change_t{id, player.score});
                 }
+                p = target;
+                message.emplace_back(proto::snake_t{
+                        id, proto::snake_part_t::HEAD, p.x, p.y, to_proto(dir)});
 
                 snake.step(target, state == GROW);
             }
@@ -192,6 +207,13 @@ proto::message_t game_t::step() {
     }
 
     proto::concatenate(message, generate_loots(num_loots_ate));
+
+    const int num_active = num_active_players();
+    if (num_active == 0 || (num_active == 1 && num_players() > 1)) {
+        is_finished_ = true;
+        proto::concatenate(message, score_message());
+        message.emplace_back(proto::end_game_t{});
+    }
 
     return message;
 }
