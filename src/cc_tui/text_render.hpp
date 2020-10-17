@@ -2,6 +2,9 @@
 
 #include "render.hpp"
 
+#ifndef TUI_TEXT_RENDER_HPP
+#define TUI_TEXT_RENDER_HPP
+
 namespace ui {
 
 #define MOVE_CURSOR(x, y) \
@@ -99,3 +102,5 @@ protected:
 };
  
 }
+
+#endif

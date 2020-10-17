@@ -6,6 +6,9 @@
 
 #include "keyboard.hpp"
 
+#ifndef TUI_TERMIOS_KEYBOARD_HPP
+#define TUI_TERMIOS_KEYBOARD_HPP
+
 namespace ui {
 
 struct termios_keyboard_t: public keyboard_t {
@@ -45,3 +48,5 @@ protected:
 };
 
 }
+
+#endif

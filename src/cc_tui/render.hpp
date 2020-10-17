@@ -1,4 +1,7 @@
-#include "proto.hpp"
+#include "cc_core/proto.hpp"
+
+#ifndef TUI_RENDER_HPP
+#define TUI_RENDER_HPP
 
 namespace ui {
 
@@ -17,6 +20,8 @@ struct render_t {
     virtual int add_point(int x, int y, char s) = 0;
     virtual int rm_point(int x, int y) = 0;
     virtual void add_entry(const proto::entry_t &e) = 0;
+    int height() const { return conf_.height_; }
+    int width() const { return conf_.width_; }
 
     render_t(const render_t &rhs) = delete;
     render_t &operator=(const render_t &rhs) = delete;
@@ -26,3 +31,5 @@ protected:
 };
 
 }
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef TUI_KEYBOARD_HPP
+#define TUI_KEYBOARD_HPP
+
 namespace ui {
 
 struct keyboard_t {
@@ -9,3 +12,5 @@ struct keyboard_t {
 };
 
 }
+
+#endif
