@@ -6,3 +6,4 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(cc_core)
 add_subdirectory(cc_ncurses)
+add_subdirectory(cc_tui)
