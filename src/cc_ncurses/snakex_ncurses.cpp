@@ -1,4 +1,5 @@
 #include <ncurses.h>
+#include <stdio.h>
 #include <unistd.h>
 
 #include <cmath>
@@ -8,10 +9,13 @@
 #include "cc_core/proto.hpp"
 
 #define fatal(...) do { endwin(); fprintf(stderr, __VA_ARGS__); exit(2); } while(0)
+#define log(...) do { if (log_file) fprintf(log_file, __VA_ARGS__), fflush(log_file); } while(0)
 
 int size_x, size_y;
 int nplayers;
 bool game_finished, fast_exit;
+
+FILE *log_file;
 
 void nprint(int x, int y, const char *s) {
     mvprintw(size_y - y, x + 1, s);
@@ -109,14 +113,23 @@ void handle_input(core::game_t &game) {
 
 void play_game() {
     core::game_t game({size_x, size_y}, nplayers);
-    draw(game.state_message());
+
+    {
+        auto state = game.state_message();
+        auto str = proto::to_string(state);
+        log("@state: %s\n", str.c_str());
+        draw(proto::message_from_string(str));
+    }
 
     do {
         handle_input(game);
 
         // usleep(1000 * 1000);
         proto::message_t message = game.step();
-        draw(message);
+        auto str = proto::to_string(message);
+        log("@step : %s\n", str.c_str());
+        draw(proto::message_from_string(str));
+
         refresh();
     } while (!game_finished);
 }
@@ -139,6 +152,7 @@ void init_curses() {
 
 int main(int argc, char *argv[]) {
     fast_exit = game_finished = false;
+    log_file = nullptr;
 
     init_curses();
 
@@ -148,6 +162,8 @@ int main(int argc, char *argv[]) {
     size_x = argc > 1 ? atoi(argv[1]) : 30;
     size_y = argc > 2 ? atoi(argv[2]) : size_x;
     nplayers = argc > 3 ? atoi(argv[3]) : 2;
+    const char *log_name = argc > 4 ? argv[4] : nullptr;
+    if (log_name != nullptr) log_file = fopen(log_name, "w");
 
     if (size_x + 2 + 16 > max_x || size_y + 2 > max_y)
         fatal("window:(%d,%d) requested_size:(%d,%d). Cannot fit\n",
@@ -162,6 +178,8 @@ int main(int argc, char *argv[]) {
     if (!fast_exit) { timeout(-1); getch(); }
     attroff(A_BOLD);
     endwin();
+
+    if (log_file) fclose(log_file);
 
     return 0;
 }
