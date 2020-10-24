@@ -4,10 +4,28 @@ trigger:
 - master
 
 jobs:
-- job: Build_Ubuntu_2004
+- job: Ubuntu_2004
   pool:
     vmImage: 'ubuntu-20.04'
+  strategy:
+    matrix:
+      clang:
+        CC: clang
+        CXX: clang++
+      gcc:
+        CC: gcc
+        CXX: g++
   steps:
-  - task: CMake@1
-    inputs:
-      cmakeArgs:
+    - script: |
+        if [ "$(CC)" == "clang" ]; then
+          .github/automation/env/clang.sh
+        fi
+      displayName: 'init'
+    - script: |
+        .github/automation/build.sh
+      displayName: 'build'
+#    - script:  |
+#          if [ "$(CC)" == "clang" ]; then
+#            .github/automation/clang-format.sh
+#          fi
+#        displayName: 'clang format'
