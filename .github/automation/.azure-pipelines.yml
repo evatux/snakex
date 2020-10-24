@@ -1,0 +1,13 @@
+# Azure Pipelines
+
+trigger:
+- master
+
+jobs:
+- job: Build_Ubuntu_2004
+  pool:
+    vmImage: 'ubuntu-20.04'
+  steps:
+  - task: CMake@1
+    inputs:
+      cmakeArgs:
