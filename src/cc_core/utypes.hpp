@@ -25,13 +25,13 @@ struct pos_t {
 
 static const pos_t LEFT{-1, 0}, RIGHT{+1, 0}, UP{0, +1}, DOWN{0, -1};
 
-bool operator==(const pos_t &lhs, const pos_t &rhs) { return lhs.x == rhs.x && lhs.y == rhs.y; }
-bool operator!=(const pos_t &lhs, const pos_t &rhs) { return !operator==(lhs, rhs); }
-pos_t operator-(const pos_t &rhs) { return pos_t(-rhs.x, -rhs.y); }
-pos_t operator+(const pos_t &lhs, const pos_t &rhs) { pos_t res{lhs}; return res += rhs; }
-pos_t operator-(const pos_t &lhs, const pos_t &rhs) { pos_t res{lhs}; return res -= rhs; }
-pos_t operator*(const pos_t &lhs, int a) { pos_t res{lhs}; return res *= a; }
-pos_t operator*(int a, const pos_t &rhs) { pos_t res{rhs}; return res *= a; }
+inline bool operator==(const pos_t &lhs, const pos_t &rhs) { return lhs.x == rhs.x && lhs.y == rhs.y; }
+inline bool operator!=(const pos_t &lhs, const pos_t &rhs) { return !operator==(lhs, rhs); }
+inline pos_t operator-(const pos_t &rhs) { return pos_t(-rhs.x, -rhs.y); }
+inline pos_t operator+(const pos_t &lhs, const pos_t &rhs) { pos_t res{lhs}; return res += rhs; }
+inline pos_t operator-(const pos_t &lhs, const pos_t &rhs) { pos_t res{lhs}; return res -= rhs; }
+inline pos_t operator*(const pos_t &lhs, int a) { pos_t res{lhs}; return res *= a; }
+inline pos_t operator*(int a, const pos_t &rhs) { pos_t res{rhs}; return res *= a; }
 
 } // namespace core
 
