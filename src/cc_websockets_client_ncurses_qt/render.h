@@ -12,7 +12,7 @@ public:
 
     void run() override;
 
-public Q_SIGNALS:
+Q_SIGNALS:
     void messageSent(QString qstr);
     void gameFinished();
 

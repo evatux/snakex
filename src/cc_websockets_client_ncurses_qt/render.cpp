@@ -7,7 +7,6 @@
 
 #include <QtCore/QDebug>
 
-#include "cc_core/game.hpp"
 #include "cc_core/proto.hpp"
 
 #include "render.h"
@@ -28,7 +27,7 @@ void nprint(int x, int y, const char *s) {
 }
 
 void nprint_score(int id, int score) {
-    char str[16];
+    char str[32];
     snprintf(str, sizeof(str), "P%d: %3d%s",
             id, std::abs(score), score >= 0 ? "" : " DEAD");
     attron(COLOR_PAIR(id + 1));
@@ -172,14 +171,14 @@ QT_USE_NAMESPACE
 
 Render::Render() {}
 
-void Render::recieveMessage(QString qstr) {
-    std::string message = qstr.toStdString();
+void Render::receiveMessage(QString qstr) {
+    std::string str = qstr.toStdString();
     impl::draw(proto::message_from_string(str));
     refresh();
 }
 
 void Render::run() {
-    init();
+    impl::init();
 
     do {
         char c = impl::handle_input();
