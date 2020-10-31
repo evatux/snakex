@@ -81,7 +81,7 @@ struct game_t {
     proto::message_t state_message() const;
 
     const pos_t &size() const { return size_; }
-    const bool is_finished() const { return is_finished_; }
+    bool is_finished() const { return is_finished_; }
 
     const std::vector<player_t> &players() const { return players_; }
     bool is_player_active(int id) const { return players()[id].is_active; }
