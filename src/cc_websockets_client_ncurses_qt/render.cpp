@@ -169,7 +169,7 @@ void finish() {
 
 QT_USE_NAMESPACE
 
-Render::Render() {}
+Render::Render(int id) : id_(id) {}
 
 void Render::receiveMessage(QString qstr) {
     std::string str = qstr.toStdString();
@@ -179,6 +179,7 @@ void Render::receiveMessage(QString qstr) {
 
 void Render::run() {
     impl::init();
+    emit messageSent(QString('0' + id_));
 
     do {
         char c = impl::handle_input();
@@ -186,4 +187,5 @@ void Render::run() {
     } while (!impl::game_finished);
 
     impl::finish();
+    emit gameFinished();
 }

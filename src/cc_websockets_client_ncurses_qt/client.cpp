@@ -17,13 +17,12 @@ Client::Client(const QUrl &url, bool debug, QObject *parent) :
 void Client::onConnected() {
     if (m_debug) qDebug() << "WebSocket connected";
 
-    render.reset(new Render());
-    connect(&m_webSocket, &QWebSocket::textMessageReceived,
-            render.get(), &Render::receiveMessage);
-    connect(render.get(), &Render::messageSent,
-            this, &Client::sendMessage);
-    connect(render.get(), &Render::gameFinished,
-            this, &Client::closeConnection);
+    render.reset(new Render(0));
+    connect(&m_webSocket, &QWebSocket::textMessageReceived, render.get(), &Render::receiveMessage);
+    connect(render.get(), &Render::messageSent, this, &Client::sendMessage);
+    connect(render.get(), &Render::gameFinished, this, &Client::closeConnection);
+
+    render->start();
 }
 
 void Client::sendMessage(QString message) {

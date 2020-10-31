@@ -2,6 +2,9 @@
 #include "QtWebSockets/qwebsocket.h"
 #include <QtCore/QDebug>
 
+#include "cc_core/game.hpp"
+#include "cc_core/proto.hpp"
+
 #include "server.h"
 
 QT_USE_NAMESPACE
@@ -19,43 +22,33 @@ Server::Server(quint16 port, bool debug, QObject *parent) :
     }
 }
 
-Server::~Server()
-{
+Server::~Server() {
     m_pWebSocketServer->close();
     qDeleteAll(m_clients.begin(), m_clients.end());
 }
 
-void Server::onNewConnection()
-{
+void Server::onNewConnection() {
+    if (m_debug) qDebug() << "new connection";
     QWebSocket *pSocket = m_pWebSocketServer->nextPendingConnection();
-
-    connect(pSocket, &QWebSocket::textMessageReceived, this, &Server::processTextMessage);
-    connect(pSocket, &QWebSocket::binaryMessageReceived, this, &Server::processBinaryMessage);
-    connect(pSocket, &QWebSocket::disconnected, this, &Server::socketDisconnected);
-
-    m_clients << pSocket;
+    GameServer *gameServer = new GameServer(pSocket);
+    m_clients << gameServer;
 }
 
-void Server::processTextMessage(QString message)
-{
-    QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
-    if (m_debug) qDebug() << "Message received:" << message;
-    if (pClient) pClient->sendTextMessage(message);
-}
-
-void Server::processBinaryMessage(QByteArray message)
-{
-    QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
-    if (m_debug) qDebug() << "Binary Message received:" << message;
-    if (pClient) pClient->sendBinaryMessage(message);
-}
-
-void Server::socketDisconnected()
-{
+#if 0
+void Server::socketDisconnected() {
     QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
     if (m_debug) qDebug() << "socketDisconnected:" << pClient;
-    if (pClient) {
-        m_clients.removeAll(pClient);
-        pClient->deleteLater();
+
+    int i = 0;
+    for (; i < m_clients.size(); ++i)
+        if (m_clients[i]->socket() == pClient)
+            break;
+
+    if (i == m_clients.size()) {
+        qDebug() << "no client found?";
+        return;
     }
+    m_clients[i].socketDisconnected();
+    m_clients.removeAt(i);
 }
+#endif
