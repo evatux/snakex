@@ -27,7 +27,7 @@ private:
     QUrl m_url;
     bool m_debug;
 
-    std::unique_ptr<Render> render;
+    std::unique_ptr<Render> render_;
 };
 
 #endif // CLIENT_H

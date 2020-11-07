@@ -55,6 +55,7 @@ void GameServer::makeStep() {
 }
 
 void GameServer::socketDisconnected() {
+    timer_->stop();
     if (pSocket) pSocket->deleteLater();
     pSocket = nullptr;
 }

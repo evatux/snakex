@@ -177,6 +177,10 @@ void Render::receiveMessage(QString qstr) {
     refresh();
 }
 
+void Render::stopRendering() {
+    impl::game_finished = true;
+}
+
 void Render::run() {
     impl::init();
     emit messageSent(QString('0' + id_));

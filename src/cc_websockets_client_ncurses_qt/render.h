@@ -9,9 +9,9 @@ class Render : public QThread
     Q_OBJECT
 public:
     explicit Render(int id);
-    void init();
 
     void run() override;
+    void stopRendering();
 
 Q_SIGNALS:
     void messageSent(QString qstr);
@@ -23,6 +23,7 @@ public Q_SLOTS:
 private:
     int id_;
 
+    void init();
 };
 
 #endif // RENDER_H
