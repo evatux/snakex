@@ -19,6 +19,20 @@ namespace proto {
     snake         SN <id> b <x> <y>
                   SN <id> h <x> <y> [URDL]
     end_message   EM
+
+
+Communication protocol:
+    Dir     #       Command             Meaning
+    ------- ------- ------------------- ----------------------
+    S->C    1       ID <id>             Assign id to client
+            2       ST <x> <y>          Specify the field size
+    C->S        1   ID <id>             acK
+                2   EG                  Fail
+
+    S->C    3+      CL | LO | SC | SN   Game scene changes
+    C->S        3+  KE                  Key pressed
+
+    S->C    N       EG                  End game
 #endif
 
 std::string to_string(const message_t &message) {
@@ -31,6 +45,9 @@ std::string to_string(const message_t &message) {
             res += std::string(" ") + std::to_string(v.y);
         } else if (std::holds_alternative<end_game_t>(e)) {
             res += std::string("EG");
+        } else if (std::holds_alternative<id_t>(e)) {
+            res += std::string("ID");
+            res += std::string(" ") + std::to_string(v.id);
         } else if (std::holds_alternative<loot_t>(e)) {
             const auto &v = std::get<loot_t>(e);
             res += std::string("LO");
@@ -76,6 +93,14 @@ end_game_t end_game_from_string(const std::string &str, size_t &i) {
     sscanf(str.data() + i + 2, ";%n", &read);
     i += 2 + read;
     return {};
+}
+
+id_t id_from_string(const std::string &str, size_t &i) {
+    int read;
+    int id;
+    sscanf(str.data() + i + 2, " %d;%n", &id,&read);
+    i += 2 + read;
+    return {id};
 }
 
 loot_t loot_from_string(const std::string &str, size_t &i) {
@@ -136,6 +161,8 @@ message_t message_from_string(const std::string &str) {
             message.emplace_back(clear_from_string(str, i));
         else if (command == "EG")
             message.emplace_back(end_game_from_string(str, i));
+        else if (command == "ID")
+            message.emplace_back(id_game_from_string(str, i));
         else if (command == "LO")
             message.emplace_back(loot_from_string(str, i));
         else if (command == "SC")

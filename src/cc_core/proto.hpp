@@ -16,6 +16,7 @@ enum class dir_t: char { UNDEF = '\0', UP = 'U', RIGHT = 'R', DOWN = 'D', LEFT =
 // entries
 struct clear_t { int x, y; };
 struct end_game_t {};
+struct id_t { int id; };
 struct loot_t { int id; int x, y; };
 struct score_change_t { int id; int score; };
 struct setup_t { int wx, wy; };
@@ -25,6 +26,7 @@ struct snake_t { int id; snake_part_t part; int x, y; dir_t dir = dir_t::UNDEF; 
 using entry_t = std::variant<
     clear_t,
     end_game_t,
+    id_t,
     loot_t,
     score_change_t,
     setup_t,
