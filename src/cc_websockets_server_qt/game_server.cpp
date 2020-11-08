@@ -8,9 +8,22 @@
 
 QT_USE_NAMESPACE
 
-GameServer::GameServer(QWebSocket *pSocket) : pSocket(pSocket) {
-    connect(pSocket, &QWebSocket::textMessageReceived, this, &GameServer::processTextMessage);
-    connect(pSocket, &QWebSocket::disconnected, this, &GameServer::socketDisconnected);
+GameServer::GameServer(const QList<QWebSocket *> &clientList) {
+    wsize_ = {30, 30};
+
+    int id = 0;
+    for (auto client: clientList) {
+        clientToId_[client] = id;
+        idToClient_[id] = client;
+        ++id;
+
+        connect(client, &QWebSocket::textMessageReceived,
+                this, &GameServer::processTextMessage);
+        connect(client, &QWebSocket::disconnected,
+                this, &GameServer::socketDisconnected);
+
+        welcomeClient(id);
+    }
 
     game_.reset(new core::game_t({30, 30}, 1));
     timer_.reset(new QTimer(this));
@@ -29,6 +42,8 @@ void GameServer::startGame() {
 }
 
 void GameServer::processTextMessage(QString message) {
+    int id = senderToId(sender());
+
     auto str = message.toStdString();
     if (str.empty()) return;
 

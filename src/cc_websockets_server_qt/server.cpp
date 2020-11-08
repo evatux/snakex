@@ -9,25 +9,30 @@
 
 QT_USE_NAMESPACE
 
-Server::Server(quint16 port, bool debug, QObject *parent)
+Server::Server(quint16 port, int nplayers, bool debug, QObject *parent)
     : QObject(parent)
-    , m_pWebSocketServer(new QWebSocketServer(QStringLiteral("Server"), QWebSocketServer::NonSecureMode, this))
-    , m_debug(debug) {
-    if (m_pWebSocketServer->listen(QHostAddress::Any, port)) {
-        if (m_debug) qDebug() << "server listening on port " << port;
-        connect(m_pWebSocketServer, &QWebSocketServer::newConnection, this, &Server::onNewConnection);
-        connect(m_pWebSocketServer, &QWebSocketServer::closed, this, &Server::closed);
+    , pWebSocketServer_(new QWebSocketServer(QStringLiteral("Server"), QWebSocketServer::NonSecureMode, this))
+    , nplayers_(nplayers)
+    , debug_(debug) {
+    if (pWebSocketServer_->listen(QHostAddress::Any, port)) {
+        if (debug_) qDebug() << "server listening on port " << port;
+        connect(pWebSocketServer_, &QWebSocketServer::newConnection, this, &Server::onNewConnection);
+        connect(pWebSocketServer_, &QWebSocketServer::closed, this, &Server::closed);
     }
 }
 
 Server::~Server() {
-    m_pWebSocketServer->close();
-    qDeleteAll(m_clients.begin(), m_clients.end());
+    pWebSocketServer_->close();
+    qDeleteAll(clientList_.begin(), clientList_.end());
 }
 
 void Server::onNewConnection() {
-    if (m_debug) qDebug() << "new connection";
-    QWebSocket *pSocket = m_pWebSocketServer->nextPendingConnection();
-    GameServer *gameServer = new GameServer(pSocket);
-    m_clients << gameServer;
+    if (debug_) qDebug() << "new connection";
+    QWebSocket *pSocket = pWebSocketServer_->nextPendingConnection();
+    clientList_ << pSocket;
+
+    if (clientList_.size() == nplayers_) {
+        GameServer *gameServer = new GameServer(clientList_);
+        clientList_.clear();
+    }
 }
