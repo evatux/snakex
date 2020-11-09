@@ -32,7 +32,7 @@ void Server::onNewConnection() {
     clientList_ << pSocket;
 
     if (clientList_.size() == nplayers_) {
-        GameServer *gameServer = new GameServer(clientList_);
+        GameServer *gameServer = new GameServer(clientList_, debug_);
         clientList_.clear();
     }
 }

@@ -21,11 +21,11 @@ int main(int argc, char *argv[]) {
     QCommandLineOption nplayersOption(QStringList() << "n" << "nplayers",
             QCoreApplication::translate("main", "Number of players [default: 1]."),
             QCoreApplication::translate("main", "num players"), QLatin1String("1"));
-    parser.addOption(portOption);
+    parser.addOption(nplayersOption);
     parser.process(a);
     bool debug = parser.isSet(dbgOption);
     int port = parser.value(portOption).toInt();
-    int nplayers = parser.value(nplayers).toInt();
+    int nplayers = parser.value(nplayersOption).toInt();
 
     Server *server = new Server(port, nplayers, debug);
     QObject::connect(server, &Server::closed, &a, &QCoreApplication::quit);

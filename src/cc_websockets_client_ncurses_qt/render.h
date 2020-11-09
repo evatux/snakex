@@ -4,24 +4,24 @@
 #include <QtCore/QObject>
 #include <QtCore/QThread>
 
-class Render : public QThread
-{
+#include "cc_core/proto.hpp"
+
+class Render : public QThread {
     Q_OBJECT
 public:
     explicit Render(int id);
 
     void run() override;
+    bool isReady() const;
     void stopRendering();
+    void receiveMessage(const proto::message_t &message);
 
 Q_SIGNALS:
     void messageSent(QString qstr);
     void gameFinished();
 
-public Q_SLOTS:
-    void receiveMessage(QString qstr);
-
 private:
-    int id_;
+    int id_ = -1;
 
     void init();
 };

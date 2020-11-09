@@ -19,6 +19,7 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void onConnected();
+    void receiveMessage(QString message);
     void sendMessage(QString message);
     void closeConnection();
 
@@ -26,6 +27,9 @@ private:
     QWebSocket m_webSocket;
     QUrl m_url;
     bool m_debug;
+
+    bool initReady_ = false;
+    int id_ = -1;
 
     std::unique_ptr<Render> render_;
 };

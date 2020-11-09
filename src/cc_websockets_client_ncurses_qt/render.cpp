@@ -18,6 +18,8 @@ namespace impl {
 
 int size_x, size_y;
 int nplayers;
+int this_player_id = -1;
+bool ready = false;
 bool game_finished, fast_exit;
 
 FILE *log_file;
@@ -28,8 +30,10 @@ void nprint(int x, int y, const char *s) {
 
 void nprint_score(int id, int score) {
     char str[32];
-    snprintf(str, sizeof(str), "P%d: %3d%s",
-            id, std::abs(score), score >= 0 ? "" : " DEAD");
+    snprintf(str, sizeof(str), "P%d: %3d%s%s",
+            id, std::abs(score),
+            id == this_player_id ? "YOU" : "",
+            score >= 0 ? "" : " DEAD");
     attron(COLOR_PAIR(id + 1));
     mvprintw(2 + id * 2, size_x + 3, str);
     attroff(COLOR_PAIR(id + 1));
@@ -101,16 +105,16 @@ char handle_input() {
         int c = getch();
         switch(c) {
             // Player 1
-            case KEY_UP:    return 'W';
-            case KEY_DOWN:  return 'S';
-            case KEY_LEFT:  return 'A';
-            case KEY_RIGHT: return 'D';
+            case KEY_UP:    return static_cast<char>(proto::dir_t::UP);
+            case KEY_DOWN:  return static_cast<char>(proto::dir_t::DOWN);
+            case KEY_LEFT:  return static_cast<char>(proto::dir_t::LEFT);
+            case KEY_RIGHT: return static_cast<char>(proto::dir_t::RIGHT);
 
             // Player 2
-            case 'w': case 's': case 'a': case 'd': return c;
+            // case 'w': case 's': case 'a': case 'd': return c;
 
             // Control
-            case 'q': fast_exit = game_finished = true; return '\0';
+            case 'q': fast_exit = game_finished = true; return 'q';
         }
     }
 }
@@ -153,6 +157,7 @@ int init() {
         fatal("nplayers:%d != 1 or 2\n", nplayers);
 
     clear();
+    ready = true;
     return 0;
 }
 
@@ -169,11 +174,12 @@ void finish() {
 
 QT_USE_NAMESPACE
 
-Render::Render(int id) : id_(id) {}
+Render::Render(int id) : id_(id) {
+    impl::this_player_id = id_; // FIXME: remove globals
+}
 
-void Render::receiveMessage(QString qstr) {
-    std::string str = qstr.toStdString();
-    impl::draw(proto::message_from_string(str));
+void Render::receiveMessage(const proto::message_t &message) {
+    impl::draw(message);
     refresh();
 }
 
@@ -181,13 +187,23 @@ void Render::stopRendering() {
     impl::game_finished = true;
 }
 
+bool Render::isReady() const {
+    return impl::ready;
+}
+
 void Render::run() {
     impl::init();
-    emit messageSent(QString('0' + id_));
 
     do {
         char c = impl::handle_input();
-        if (c != '\0') emit messageSent(QString(c));
+        switch (c) {
+            case 'q':
+                emit messageSent(QString(proto::to_string(proto::message_t{proto::end_game_t{}}).c_str()));
+                break;
+            default:
+                emit messageSent(QString(proto::to_string(proto::message_t{proto::move_t{static_cast<proto::dir_t>(c)}}).c_str()));
+                break;
+        }
     } while (!impl::game_finished);
 
     impl::finish();

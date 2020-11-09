@@ -1,5 +1,10 @@
 #include "client.h"
+
+#include <string>
+
 #include <QtCore/QDebug>
+
+#include "cc_core/proto.hpp"
 
 QT_USE_NAMESPACE
 
@@ -16,17 +21,41 @@ Client::Client(const QUrl &url, bool debug, QObject *parent)
 void Client::onConnected() {
     if (m_debug) qDebug() << "WebSocket connected";
 
-    render_.reset(new Render(0));
-    connect(&m_webSocket, &QWebSocket::textMessageReceived, render_.get(), &Render::receiveMessage);
-    connect(render_.get(), &Render::messageSent, this, &Client::sendMessage);
-    connect(render_.get(), &Render::gameFinished, this, &Client::closeConnection);
-
-    render_->start();
+    connect(&m_webSocket, &QWebSocket::textMessageReceived,
+            this, &Client::receiveMessage);
 }
 
-void Client::sendMessage(QString message) {
-    if (m_debug) qDebug() << "Message received:" << message;
-    if (m_webSocket.isValid()) m_webSocket.sendTextMessage(message);
+void Client::receiveMessage(QString qstr) {
+    std::string str = qstr.toStdString();
+    auto message = proto::message_from_string(str);
+
+    if (!initReady_) {
+        assert(message.size() == 2);
+        id_ = std::get<proto::id_t>(message[0]).id;
+        // FIXME: check window size
+        sendMessage(QString(proto::to_string(proto::message_t{proto::id_t{id_}}).c_str()));
+
+        render_.reset(new Render(id_));
+        connect(render_.get(), &Render::messageSent, this, &Client::sendMessage);
+        connect(render_.get(), &Render::gameFinished, this, &Client::closeConnection);
+
+        initReady_ = true;
+        return;
+    }
+
+    if (render_->isFinished()) {
+        qDebug() << "EEE receiveMessage: FIXME: render_->isFinished()";
+        return; // FIXME: process
+    }
+
+    if (!render_->isRunning()) render_->start();
+    while (!render_->isReady()); // FIXME: remove busy wait
+    render_->receiveMessage(message);
+}
+
+void Client::sendMessage(QString qstr) {
+    if (m_debug) qDebug() << "Message received:" << qstr;
+    if (m_webSocket.isValid()) m_webSocket.sendTextMessage(qstr);
 }
 
 void Client::closeConnection() {
