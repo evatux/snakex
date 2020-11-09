@@ -14,6 +14,7 @@ namespace proto {
     clear         CL <x> <y>
     end_game      EG
     loot          LO <id> <x> <y>
+    move          MO [URDL]
     score_change  SC <id> <s>
     setup         ST <x> <y>
     snake         SN <id> b <x> <y>
@@ -30,52 +31,63 @@ Communication protocol:
                 2   EG                  Fail
 
     S->C    3+      CL | LO | SC | SN   Game scene changes
-    C->S        3+  KE                  Key pressed
+    C->S        3+  MO                  Move
 
-    S->C    N       EG                  End game
+    S->C    N       EG                  End game // either server
+    C->S    N       EG                  End game // or client
 #endif
+
+std::string to_string(const entry_t &entry) {
+    std::string res;
+    if (std::holds_alternative<clear_t>(entry)) {
+        const auto &v = std::get<clear_t>(entry);
+        res += std::string("CL");
+        res += std::string(" ") + std::to_string(v.x);
+        res += std::string(" ") + std::to_string(v.y);
+    } else if (std::holds_alternative<end_game_t>(entry)) {
+        res += std::string("EG");
+    } else if (std::holds_alternative<id_t>(entry)) {
+        const auto &v = std::get<id_t>(entry);
+        res += std::string("ID");
+        res += std::string(" ") + std::to_string(v.id);
+    } else if (std::holds_alternative<loot_t>(entry)) {
+        const auto &v = std::get<loot_t>(entry);
+        res += std::string("LO");
+        res += std::string(" ") + std::to_string(v.id);
+        res += std::string(" ") + std::to_string(v.x);
+        res += std::string(" ") + std::to_string(v.y);
+    } else if (std::holds_alternative<move_t>(entry)) {
+        const auto &v = std::get<move_t>(entry);
+        res += std::string("MO");
+        res += std::string(" ") + std::to_string(static_cast<char>(v.dir));
+    } else if (std::holds_alternative<score_change_t>(entry)) {
+        const auto &v = std::get<score_change_t>(entry);
+        res += std::string("SC");
+        res += std::string(" ") + std::to_string(v.id);
+        res += std::string(" ") + std::to_string(v.score);
+    } else if (std::holds_alternative<setup_t>(entry)) {
+        const auto &v = std::get<setup_t>(entry);
+        res += std::string("ST");
+        res += std::string(" ") + std::to_string(v.wx);
+        res += std::string(" ") + std::to_string(v.wy);
+    } else if (std::holds_alternative<snake_t>(entry)) {
+        const auto &v = std::get<snake_t>(entry);
+        res += std::string("SN");
+        res += std::string(" ") + std::to_string(v.id);
+        res += std::string(" ") + static_cast<char>(v.part);
+        res += std::string(" ") + std::to_string(v.x);
+        res += std::string(" ") + std::to_string(v.y);
+        if (v.part == snake_part_t::HEAD)
+            res += std::string(" ") + static_cast<char>(v.dir);
+    }
+    res += ";";
+    return res;
+}
 
 std::string to_string(const message_t &message) {
     std::string res;
-    for (auto &e: message) {
-        if (std::holds_alternative<clear_t>(e)) {
-            const auto &v = std::get<clear_t>(e);
-            res += std::string("CL");
-            res += std::string(" ") + std::to_string(v.x);
-            res += std::string(" ") + std::to_string(v.y);
-        } else if (std::holds_alternative<end_game_t>(e)) {
-            res += std::string("EG");
-        } else if (std::holds_alternative<id_t>(e)) {
-            res += std::string("ID");
-            res += std::string(" ") + std::to_string(v.id);
-        } else if (std::holds_alternative<loot_t>(e)) {
-            const auto &v = std::get<loot_t>(e);
-            res += std::string("LO");
-            res += std::string(" ") + std::to_string(v.id);
-            res += std::string(" ") + std::to_string(v.x);
-            res += std::string(" ") + std::to_string(v.y);
-        } else if (std::holds_alternative<score_change_t>(e)) {
-            const auto &v = std::get<score_change_t>(e);
-            res += std::string("SC");
-            res += std::string(" ") + std::to_string(v.id);
-            res += std::string(" ") + std::to_string(v.score);
-        } else if (std::holds_alternative<setup_t>(e)) {
-            const auto &v = std::get<setup_t>(e);
-            res += std::string("ST");
-            res += std::string(" ") + std::to_string(v.wx);
-            res += std::string(" ") + std::to_string(v.wy);
-        } else if (std::holds_alternative<snake_t>(e)) {
-            const auto &v = std::get<snake_t>(e);
-            res += std::string("SN");
-            res += std::string(" ") + std::to_string(v.id);
-            res += std::string(" ") + static_cast<char>(v.part);
-            res += std::string(" ") + std::to_string(v.x);
-            res += std::string(" ") + std::to_string(v.y);
-            if (v.part == snake_part_t::HEAD)
-                res += std::string(" ") + static_cast<char>(v.dir);
-        }
-        res += ";";
-    }
+    for (auto &entry: message)
+        res += to_string(entry);
     res += "EM;";
     return res;
 }
@@ -109,6 +121,16 @@ loot_t loot_from_string(const std::string &str, size_t &i) {
     sscanf(str.data() + i + 2, " %d %d %d;%n", &id, &x, &y, &read);
     i += 2 + read;
     return {id, x, y};
+}
+
+move_t move_from_string(const std::string &str, size_t &i) {
+    int read;
+    char c;
+
+    sscanf(str.data() + i + 2, " %c;%n", &c, &read);
+    i += 2 + read;
+
+    return {static_cast<dir_t>(c)};
 }
 
 score_change_t score_change_from_string(const std::string &str, size_t &i) {
@@ -162,9 +184,11 @@ message_t message_from_string(const std::string &str) {
         else if (command == "EG")
             message.emplace_back(end_game_from_string(str, i));
         else if (command == "ID")
-            message.emplace_back(id_game_from_string(str, i));
+            message.emplace_back(id_from_string(str, i));
         else if (command == "LO")
             message.emplace_back(loot_from_string(str, i));
+        else if (command == "MO")
+            message.emplace_back(move_from_string(str, i));
         else if (command == "SC")
             message.emplace_back(score_change_from_string(str, i));
         else if (command == "ST")

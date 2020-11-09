@@ -18,6 +18,7 @@ struct clear_t { int x, y; };
 struct end_game_t {};
 struct id_t { int id; };
 struct loot_t { int id; int x, y; };
+struct move_t { dir_t dir; };
 struct score_change_t { int id; int score; };
 struct setup_t { int wx, wy; };
 struct snake_t { int id; snake_part_t part; int x, y; dir_t dir = dir_t::UNDEF; };
@@ -28,6 +29,7 @@ using entry_t = std::variant<
     end_game_t,
     id_t,
     loot_t,
+    move_t,
     score_change_t,
     setup_t,
     snake_t
@@ -41,6 +43,7 @@ inline message_t &concatenate(message_t &self, message_t &&rhs) {
     return self;
 }
 
+std::string to_string(const entry_t &entry);
 std::string to_string(const message_t &message);
 message_t message_from_string(const std::string &str);
 
