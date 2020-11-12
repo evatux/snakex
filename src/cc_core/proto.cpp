@@ -59,7 +59,7 @@ std::string to_string(const entry_t &entry) {
     } else if (std::holds_alternative<move_t>(entry)) {
         const auto &v = std::get<move_t>(entry);
         res += std::string("MO");
-        res += std::string(" ") + std::to_string(static_cast<char>(v.dir));
+        res += std::string(" ") + static_cast<char>(v.dir);
     } else if (std::holds_alternative<score_change_t>(entry)) {
         const auto &v = std::get<score_change_t>(entry);
         res += std::string("SC");
