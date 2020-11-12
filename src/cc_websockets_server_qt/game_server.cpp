@@ -29,7 +29,7 @@ GameServer::GameServer(const QList<QWebSocket *> &clientList, bool debug)
         ++id;
     }
 
-    game_.reset(new core::game_t({30, 30}, 1));
+    game_.reset(new core::game_t({30, 30}, nplayers_));
     timer_.reset(new QTimer(this));
     connect(timer_.get(), &QTimer::timeout, this, &GameServer::makeStep);
 }

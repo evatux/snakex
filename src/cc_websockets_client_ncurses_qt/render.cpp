@@ -179,7 +179,12 @@ Render::Render(int id) : id_(id) {
 }
 
 void Render::receiveMessage(const proto::message_t &message) {
-    impl::draw(message);
+    message_queue_.push(message);
+}
+
+void Render::processWaitingMessages() {
+    while (auto message = message_queue_.pop())
+        impl::draw(*message);
     refresh();
 }
 
@@ -195,8 +200,11 @@ void Render::run() {
     impl::init();
 
     do {
+        processWaitingMessages();
         char c = impl::handle_input();
         switch (c) {
+            case '\0':
+                break;
             case 'q':
                 emit messageSent(QString(proto::to_string(proto::message_t{proto::end_game_t{}}).c_str()));
                 break;
