@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 2.8.11)
 
 project(snakex CXX)
+set(CMAKE_CXX_STANDARD 17)
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "")
     message(STATUS "CMAKE_BUILD_TYPE is unset, defaulting to Release")
