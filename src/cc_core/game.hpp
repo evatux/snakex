@@ -36,6 +36,7 @@ struct snake_t {
     const pos_t &head() const { assert(!body_.empty()); return *body_.begin(); }
     const pos_t &tail() const { assert(!body_.empty()); return *body_.rbegin(); }
     const pos_t &head_direction() const { return head_direction_; }
+    const pos_t &last_head_direction() const { return last_head_direction_; }
 
     std::list<pos_t>::const_iterator begin() const { return body_.cbegin(); }
     std::list<pos_t>::const_iterator end() const { return body_.cend(); }
@@ -53,11 +54,13 @@ struct snake_t {
     void step(const pos_t &target, bool grow) {
         body_.push_front(target);
         if (!grow) body_.pop_back();
+        last_head_direction_ = head_direction();
     }
 
 private:
     std::list<pos_t> body_;
     pos_t head_direction_;
+    pos_t last_head_direction_;
 };
 
 struct loot_t {

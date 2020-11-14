@@ -111,10 +111,11 @@ bool game_t::is_empty_cell(const pos_t &pos) const {
 }
 
 void game_t::set_snake_head_direction(int id, const pos_t &head_direction) {
-    assert(players_[id].is_active);
-    assert(0 <= id && id < (int)players_.size());
     assert(head_direction.is_direction());
-    players_[id].snake.set_head_direction(head_direction);
+    assert(0 <= id && id < (int)players_.size());
+    player_t &player = players_[id];
+    assert(player.is_active);
+    player.snake.set_head_direction(head_direction);
 }
 
 proto::message_t game_t::remove_player(int id) {
@@ -141,7 +142,11 @@ proto::message_t game_t::step() {
         if (!player.is_active) continue;
 
         auto &snake = player.snake;
-        const pos_t dir = snake.head_direction();
+        pos_t dir = snake.head_direction();
+        if (dir == -snake.last_head_direction()) {
+            dir = snake.last_head_direction();
+            snake.set_head_direction(dir);
+        }
         const pos_t target = maybe_mirror(snake.head() + dir);
 
         enum { PROCESSING, STEP, GROW, DIE } state = PROCESSING;
