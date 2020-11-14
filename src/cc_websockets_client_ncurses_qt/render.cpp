@@ -32,7 +32,7 @@ void nprint_score(int id, int score) {
     char str[32];
     snprintf(str, sizeof(str), "P%d: %3d%s%s",
             id, std::abs(score),
-            id == this_player_id ? "YOU" : "",
+            id == this_player_id ? " YOU" : "",
             score >= 0 ? "" : " DEAD");
     attron(COLOR_PAIR(id + 1));
     mvprintw(2 + id * 2, size_x + 3, str);
@@ -93,7 +93,7 @@ void draw(const proto::entry_t &e) {
 void draw(const proto::message_t &m) { for (const auto &e: m) draw(e); }
 
 char handle_input() {
-    const int tout = 500;
+    const int tout = 20;
 
     auto start = std::chrono::high_resolution_clock::now();
     while (1) {
@@ -109,9 +109,6 @@ char handle_input() {
             case KEY_DOWN:  return static_cast<char>(proto::dir_t::DOWN);
             case KEY_LEFT:  return static_cast<char>(proto::dir_t::LEFT);
             case KEY_RIGHT: return static_cast<char>(proto::dir_t::RIGHT);
-
-            // Player 2
-            // case 'w': case 's': case 'a': case 'd': return c;
 
             // Control
             case 'q': fast_exit = game_finished = true; return 'q';

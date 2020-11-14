@@ -8,8 +8,7 @@
 
 #include "render.h"
 
-class Client : public QObject
-{
+class Client : public QObject {
     Q_OBJECT
 public:
     explicit Client(const QUrl &url, bool debug = false, QObject *parent = nullptr);
@@ -26,7 +25,7 @@ private Q_SLOTS:
 private:
     QWebSocket m_webSocket;
     QUrl m_url;
-    bool m_debug;
+    bool debug_;
 
     bool initReady_ = false;
     int id_ = -1;

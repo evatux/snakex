@@ -11,15 +11,15 @@ QT_USE_NAMESPACE
 Client::Client(const QUrl &url, bool debug, QObject *parent)
     : QObject(parent)
     , m_url(url)
-    , m_debug(debug) {
-    if (m_debug) qDebug() << "WebSocket server:" << url;
+    , debug_(debug) {
+    if (debug_) qDebug() << "WebSocket server:" << url;
     connect(&m_webSocket, &QWebSocket::connected, this, &Client::onConnected);
     connect(&m_webSocket, &QWebSocket::disconnected, this, &Client::closeConnection);
     m_webSocket.open(QUrl(url));
 }
 
 void Client::onConnected() {
-    if (m_debug) qDebug() << "WebSocket connected";
+    if (debug_) qDebug() << "WebSocket connected";
 
     connect(&m_webSocket, &QWebSocket::textMessageReceived,
             this, &Client::receiveMessage);
@@ -54,7 +54,7 @@ void Client::receiveMessage(QString qstr) {
 }
 
 void Client::sendMessage(QString qstr) {
-    if (m_debug) qDebug() << "Message received:" << qstr;
+    if (debug_) qDebug() << "Message received:" << qstr;
     if (m_webSocket.isValid()) m_webSocket.sendTextMessage(qstr);
 }
 
