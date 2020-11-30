@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Snake Game</title>
+  </head>
+
+  <meta charset="UTF-8">
+
+  <body scroll="no" style="position: fixed; overflow: hidden;">
+    <style>
+      #snakeboard {
+        xposition: absolute;
+        xtop: 50%;
+        xleft: 50%;
+        xtransform: translate(-50%, -50%);
+      }
+      #score {
+        xtext-align: center;
+        font-size: 100px;
+      }
+      #log {
+        text-align: left;
+        font-size: 16px;
+        font-family: monospace;
+        position: fixed;
+        bottom: 80px;
+      }
+    </style>
+
+    <div id="config">
+        <p>
+            <label for="conf_name">Name:</label>
+            <input type="text" id="conf_name" name="Name" value="Player">
+            <label for="conf_addr">Server:</label>
+            <input type="text" id="conf_addr" name="Address" value="192.168.0.25">
+            <label for="conf_port">Port:</label>
+            <input type="text" id="conf_port" name="Port" value="1234">
+            <button id="conf_connect" type="button" onclick="init_connection()">Connect</button>
+        </p>
+        <p>
+            <label for="conf_log">Log:</label>
+            <input type="checkbox" id="log_checkbox">
+        </p>
+    </div></p>
+
+    <div id="game">
+        <canvas id="snakeboard"></canvas>
+        <p id="p0_div" hidden><a id="p0_name"></a><a id="p0_score"></a></p>
+        <p id="p1_div" hidden><a id="p1_name"></a><a id="p1_score"></a></p>
+        <p id="p2_div" hidden><a id="p2_name"></a><a id="p2_score"></a></p>
+        <p id="p3_div" hidden><a id="p3_name"></a><a id="p3_score"></a></p>
+    </div>
+    <div id="log"></div>
+  </body>
+
+  <script src="js/log.js"></script>
+  <script src="js/swipe.js"></script>
+  <script src="js/game.js"></script>
+</html>
