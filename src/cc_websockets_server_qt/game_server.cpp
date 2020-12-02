@@ -54,13 +54,14 @@ void GameServer::receiveInitFromClient(int id, const proto::message_t &message)
     }
 
     const auto &e = message[0];
-    if (std::holds_alternative<proto::id_t>(e)) {
-        const auto &v = std::get<proto::id_t>(e);
+    if (std::holds_alternative<proto::name_t>(e)) {
+        const auto &v = std::get<proto::name_t>(e);
         if (v.id != id) {
             qDebug() << "EEE receiveInitFromClient(" << id << "): "
                 << "client returned " << v.id << " as its id";
             stopGame();
         }
+        proto::concatenate(start_message_, proto::message_t{e});
         setClientReady(id);
     } else {
         qDebug() << "EEE receiveInitFromClient(" << id << "): "
@@ -78,9 +79,9 @@ void GameServer::processClientMessage(int id, const proto::message_t &message) {
 
     const auto &e = message[0];
     if (std::holds_alternative<proto::end_game_t>(e)) {
-        qDebug() << "EEE processClientMessage(" << id << "): "
-            << "client has finished game";
-        stopGame();
+        qDebug() << "III processClientMessage(" << id << "): "
+            << "client has left game";
+        game_->kill(id);
     } else if (std::holds_alternative<proto::move_t>(e)) {
         const auto &v = std::get<proto::move_t>(e);
         core::pos_t pos;
@@ -102,6 +103,7 @@ void GameServer::processClientMessage(int id, const proto::message_t &message) {
 }
 
 void GameServer::startGame() {
+    broadcastMessage(start_message_);
     broadcastMessage(game_->state_message());
     timer_->start(500);
 }
@@ -144,11 +146,16 @@ void GameServer::processTextMessage(QString qstr) {
 
 void GameServer::makeStep() {
     broadcastMessage(game_->step());
+    if (game_->is_finished()) stopGame();
 }
 
 void GameServer::socketDisconnected() {
-    qDebug() << "WWW socketDisconnected: connection with client lost";
-    stopGame();
+    int id = senderToId(sender());
+    if (game_->is_player_active(id)) {
+        qDebug() << "III socketDisconnected( " << id << "): "
+            << "connection with client lost";
+        game_->kill(id);
+    }
 }
 
 void GameServer::sendMessage(int id, const proto::message_t &message) const {

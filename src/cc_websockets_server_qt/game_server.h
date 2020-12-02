@@ -39,6 +39,8 @@ private:
     std::unique_ptr<QTimer> timer_;
     std::unique_ptr<core::game_t> game_;
 
+    proto::message_t start_message_;
+
     // Client QWebSocket <-> id mapping
     int clientToId(QWebSocket *client) const { return clientToId_.at(client); }
     int senderToId(QObject *sender) const {
