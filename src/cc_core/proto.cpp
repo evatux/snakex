@@ -110,7 +110,7 @@ end_game_t end_game_from_string(const std::string &str, size_t &i) {
 id_t id_from_string(const std::string &str, size_t &i) {
     int read;
     int id;
-    sscanf(str.data() + i + 2, " %d;%n", &id,&read);
+    sscanf(str.data() + i + 2, " %d;%n", &id, &read);
     i += 2 + read;
     return {id};
 }

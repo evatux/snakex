@@ -71,9 +71,15 @@ struct loot_t {
 
 struct game_t {
     struct player_t {
-        bool is_active;
+        enum class state_t {active, killed, dead};
+
+        player_t(snake_t &&snake): snake(std::move(snake)) {}
         snake_t snake;
-        int score;
+        state_t state = state_t::active;
+        int score = 0;
+
+        bool is_active() const { return state == state_t::active; }
+        bool is_killed() const { return state == state_t::killed; }
     };
 
     game_t(const pos_t &size, int num_players): size_(size) {
@@ -87,7 +93,8 @@ struct game_t {
     bool is_finished() const { return is_finished_; }
 
     const std::vector<player_t> &players() const { return players_; }
-    bool is_player_active(int id) const { return players()[id].is_active; }
+    bool is_player_active(int id) const { return players()[id].is_active(); }
+    bool is_player_killed(int id) const { return players()[id].is_killed(); }
     int num_active_players() const {
         int res = 0;
         for (int id = 0; id < num_players(); ++id)
@@ -102,6 +109,7 @@ struct game_t {
 
     // modifiers
     void set_snake_head_direction(int id, const pos_t &direction);
+    void kill(int id);
     proto::message_t step();
 
 private:
@@ -117,6 +125,7 @@ private:
     void generate_players(int num_players);
     proto::message_t generate_loots(int num_loots);
 
+    proto::message_t process_killed();
     proto::message_t remove_player(int id);
     proto::message_t score_message() const;
 

@@ -37,7 +37,7 @@ void game_t::generate_players(int num_players) {
         pos_t direction = directions[i];
         snake_t snake(head, direction, start_snake_length);
 
-        player_t player{true, std::move(snake), 0};
+        player_t player(std::move(snake));
         players_.emplace_back(player);
     }
 }
@@ -102,7 +102,7 @@ proto::message_t game_t::score_message() const {
 
 bool game_t::is_empty_cell(const pos_t &pos) const {
     for (const auto &player: players())
-        if (player.is_active && player.snake.contains(pos)) return false;
+        if (player.is_active() && player.snake.contains(pos)) return false;
 
     for (const auto &loot: loots())
         if (loot.pos == pos) return false;
@@ -114,15 +114,15 @@ void game_t::set_snake_head_direction(int id, const pos_t &head_direction) {
     assert(head_direction.is_direction());
     assert(0 <= id && id < (int)players_.size());
     player_t &player = players_[id];
-    assert(player.is_active);
+    if (player.is_active() == false) return;
     player.snake.set_head_direction(head_direction);
 }
 
 proto::message_t game_t::remove_player(int id) {
     proto::message_t message;
 
-    assert(players_[id].is_active == true);
-    players_[id].is_active = false;
+    assert(players_[id].state != player_t::state_t::dead);
+    players_[id].state = player_t::state_t::dead;
     players_[id].score *= -1;
 
     message.emplace_back(proto::score_change_t{id, players_[id].score});
@@ -131,15 +131,32 @@ proto::message_t game_t::remove_player(int id) {
     return message;
 }
 
+void game_t::kill(int id) {
+    assert(id < num_players());
+    assert(players_[id].is_active());
+    players_[id].state = player_t::state_t::killed;
+}
+
+proto::message_t game_t::process_killed() {
+    proto::message_t message;
+    for (int id = 0; id < num_players(); ++id) {
+        if (players()[id].is_killed())
+            proto::concatenate(message, remove_player(id));
+    }
+    return message;
+}
+
 proto::message_t game_t::step() {
     proto::message_t message;
     if (is_finished()) return message;
+
+    proto::concatenate(message, process_killed());
 
     int num_loots_ate = 0;
 
     for (int id = 0; id < num_players(); ++id) {
         auto &player = players_[id];
-        if (!player.is_active) continue;
+        if (!player.is_active()) continue;
 
         auto &snake = player.snake;
         pos_t dir = snake.head_direction();
@@ -171,6 +188,7 @@ proto::message_t game_t::step() {
         if (state == PROCESSING) {
             for (int other_id = 0; other_id < num_players(); ++other_id) {
                 const auto &other_player = players_[other_id];
+                if (!other_player.is_active()) continue;
                 if (other_player.snake.contains(target)) {
                     if (other_id == id && target == snake.tail())
                         continue;
