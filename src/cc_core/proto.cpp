@@ -15,6 +15,7 @@ namespace proto {
     end_game      EG
     loot          LO <id> <x> <y>
     move          MO [URDL]
+    name          NA <id> <name>
     score_change  SC <id> <s>
     setup         ST <x> <y>
     snake         SN <id> b <x> <y>
@@ -27,11 +28,12 @@ Communication protocol:
     ------- ------- ------------------- ----------------------
     S->C    1       ID <id>             Assign id to client
             2       ST <x> <y>          Specify the field size
-    C->S        1   ID <id>             acK
+    C->S        1   NA <id> <name>      acK
                 2   EG                  Fail
+    S->C    3       NA <id> <name>      Broadcast names
 
-    S->C    3+      CL | LO | SC | SN   Game scene changes
-    C->S        3+  MO                  Move
+    S->C    4+      CL | LO | SC | SN   Game scene changes
+    C->S        4+  MO                  Move
 
     S->C    N       EG                  End game // either server
     C->S    N       EG                  End game // or client
@@ -60,6 +62,11 @@ std::string to_string(const entry_t &entry) {
         const auto &v = std::get<move_t>(entry);
         res += std::string("MO");
         res += std::string(" ") + static_cast<char>(v.dir);
+    } else if (std::holds_alternative<name_t>(entry)) {
+        const auto &v = std::get<name_t>(entry);
+        res += std::string("NA");
+        res += std::string(" ") + std::to_string(v.id);
+        res += std::string(" ") + v.name;
     } else if (std::holds_alternative<score_change_t>(entry)) {
         const auto &v = std::get<score_change_t>(entry);
         res += std::string("SC");
@@ -133,6 +140,25 @@ move_t move_from_string(const std::string &str, size_t &i) {
     return {static_cast<dir_t>(c)};
 }
 
+name_t name_from_string(const std::string &str, size_t &i) {
+    int read;
+    int id;
+    sscanf(str.data() + i + 2, " %d %n", &id, &read);
+    i += 2 + read;
+
+    std::string name;
+    while (true) {
+        const char *c = str.data() + i;
+        assert(*c != '\0');
+        if (*c == ';') break;
+        name += *c;
+        ++i;
+    }
+    i++;
+
+    return {id, name};
+}
+
 score_change_t score_change_from_string(const std::string &str, size_t &i) {
     int read;
     int id, score;
@@ -189,6 +215,8 @@ message_t message_from_string(const std::string &str) {
             message.emplace_back(loot_from_string(str, i));
         else if (command == "MO")
             message.emplace_back(move_from_string(str, i));
+        else if (command == "NA")
+            message.emplace_back(name_from_string(str, i));
         else if (command == "SC")
             message.emplace_back(score_change_from_string(str, i));
         else if (command == "ST")

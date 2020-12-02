@@ -19,6 +19,7 @@ struct end_game_t {};
 struct id_t { int id; };
 struct loot_t { int id; int x, y; };
 struct move_t { dir_t dir; };
+struct name_t { int id; std::string name; };
 struct score_change_t { int id; int score; };
 struct setup_t { int wx, wy; };
 struct snake_t { int id; snake_part_t part; int x, y; dir_t dir = dir_t::UNDEF; };
@@ -30,6 +31,7 @@ using entry_t = std::variant<
     id_t,
     loot_t,
     move_t,
+    name_t,
     score_change_t,
     setup_t,
     snake_t
