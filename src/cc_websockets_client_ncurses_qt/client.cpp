@@ -8,9 +8,10 @@
 
 QT_USE_NAMESPACE
 
-Client::Client(const QUrl &url, bool debug, QObject *parent)
+Client::Client(const QUrl &url, const std::string &name, bool debug, QObject *parent)
     : QObject(parent)
     , m_url(url)
+    , name_(name)
     , debug_(debug) {
     if (debug_) qDebug() << "WebSocket server:" << url;
     connect(&m_webSocket, &QWebSocket::connected, this, &Client::onConnected);
@@ -33,7 +34,8 @@ void Client::receiveMessage(QString qstr) {
         assert(message.size() == 2);
         id_ = std::get<proto::id_t>(message[0]).id;
         // FIXME: check window size
-        sendMessage(QString(proto::to_string(proto::message_t{proto::id_t{id_}}).c_str()));
+        sendMessage(QString(proto::to_string(
+                        proto::message_t{proto::name_t{id_, name_}}).c_str()));
 
         render_.reset(new Render(id_));
         connect(render_.get(), &Render::messageSent, this, &Client::sendMessage);

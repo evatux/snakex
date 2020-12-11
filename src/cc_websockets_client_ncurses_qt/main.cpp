@@ -10,6 +10,7 @@ int main(int argc, char *argv[]) {
     QCommandLineParser parser;
     parser.setApplicationDescription("Snakex Qt client (using websockets)");
     parser.addPositionalArgument("address", "Server address. Default localhost:1234");
+    parser.addOption({{"n", "name"}, "Client name [default 'player'].", "str", "player"});
     parser.addOption({{"d", "debug"}, "Debug output [default: off]."});
     parser.addHelpOption();
     parser.process(a);
@@ -19,9 +20,11 @@ int main(int argc, char *argv[]) {
     if (!address.contains(':')) address += ":1234";
     if (!address.startsWith("ws://")) address = QString("ws://") + address;
 
+    QString name = parser.value("name");
+
     const bool debug = parser.isSet("debug");
 
-    Client client(QUrl(address), debug);
+    Client client(QUrl(address), name.toStdString(), debug);
     QObject::connect(&client, &Client::closed, &a, &QCoreApplication::quit);
 
     return a.exec();

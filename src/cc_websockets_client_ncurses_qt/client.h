@@ -2,6 +2,7 @@
 #define CLIENT_H
 
 #include <memory>
+#include <string>
 
 #include <QtCore/QObject>
 #include <QtWebSockets/QWebSocket>
@@ -11,7 +12,7 @@
 class Client : public QObject {
     Q_OBJECT
 public:
-    explicit Client(const QUrl &url, bool debug = false, QObject *parent = nullptr);
+    explicit Client(const QUrl &url, const std::string &name, bool debug = false, QObject *parent = nullptr);
 
 Q_SIGNALS:
     void closed();
@@ -25,6 +26,7 @@ private Q_SLOTS:
 private:
     QWebSocket m_webSocket;
     QUrl m_url;
+    std::string name_;
     bool debug_;
 
     bool initReady_ = false;
