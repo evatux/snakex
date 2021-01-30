@@ -19,7 +19,7 @@ class Graphics:
 
     def draw(self):
         # FIXME: Add info
-        self.screen.blit(self.board, (25, 0))
+        self.screen.blit(self.board, (0, 0))
         pygame.display.flip()
 
     def pos2pixel(self, pos):
@@ -53,7 +53,6 @@ class Game:
         # XXX: st[0] in old protocol, but st[1] in new protocol
         self.graphics = Graphics(msg.statements[0].cells)
         self.update_state(msg)
-        time.sleep(1)
 
     def update_clear(self, s):
         print(s.__dict__.keys())
@@ -99,7 +98,6 @@ class Game:
             msg = self.network.get_message()
             self.update_state(msg)
             time.sleep(1)
-            print(time)
             self.graphics.draw()
 
 g = Game()
