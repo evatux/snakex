@@ -11,13 +11,15 @@ class Graphics:
         self.board_size = [num_cells * self.board_cell_size for num_cells in self.board_cells]
         self.info_size = (200, self.board_size[1])
         self.screen_size = (self.board_size[0] + self.info_size[0], self.board_size[1])
-        self.screen = pygame.display.set_mode(self.screen_size)
+        self.screen = pygame.display.set_mode(self.screen_size, flags=pygame.DOUBLEBUF)
+        self.screen.fill((15, 15, 15))
         self.board = pygame.Surface(self.board_size)
+        self.board.fill((0, 0, 0))
         self.rect = pygame.Surface((self.board_cell_size, self.board_cell_size))
 
     def draw(self):
         # FIXME: Add info
-        self.screen.blit(self.board, (0, 0))
+        self.screen.blit(self.board, (25, 0))
         pygame.display.flip()
 
     def pos2pixel(self, pos):
@@ -26,16 +28,21 @@ class Graphics:
     def snake(self, s):
         # FIXME: Add color based on user id
         # FIXME: Dispatch between body and head
-        self.rect.set_colorkey((0, 255, 0))
-        print(self.pos2pixel(s.position))
+        self.rect.fill((0, 255, 0))
+        self.board.blit(self.rect, self.pos2pixel(s.position))
+
+    def loot(self, s):
+        # FIXME: s.id
+        self.rect.fill((200, 200, 200))
         self.board.blit(self.rect, self.pos2pixel(s.position))
 
     def clear(self, s):
-        self.rect.set_colorkey((0, 0, 0))
+        self.rect.fill((0, 0, 0))
         self.board.blit(self.rect, self.pos2pixel(s))
 
 class Game:
     def __init__(self):
+        self.players_score = [0, 0, 0, 0]
         print("init")
         pygame.init()
 #        self.network = Network('localhost:1234')
@@ -45,6 +52,8 @@ class Game:
             msg = self.network.get_message()
         # XXX: st[0] in old protocol, but st[1] in new protocol
         self.graphics = Graphics(msg.statements[0].cells)
+        self.update_state(msg)
+        time.sleep(1)
 
     def update_clear(self, s):
         print(s.__dict__.keys())
@@ -54,10 +63,11 @@ class Game:
         self.end_game = True
 
     def update_loot(self, s):
-        self.graphics.loot(s.id, s.position)
+        print('LOOT: ', s)
+        self.graphics.loot(s)
 
     def update_score_change(self, s):
-        self.players[s.id].score = s.score
+        self.players_score[s.id] = s.score
 
     def update_snake(self, s):
         self.graphics.snake(s)
@@ -74,8 +84,10 @@ class Game:
                 'SN' : self.update_snake,
                 # 'EM' : self.update_end_message
             }
+            print(s.type)
 
             updater = types.get(s.type)
+            print(s.type, updater)
             if updater:
                 updater(s)
 
