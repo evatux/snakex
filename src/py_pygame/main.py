@@ -1,6 +1,6 @@
 import time
 import sys, pygame
-import network
+import network.server_log_reader as network
 import message
 # import websockets
 
