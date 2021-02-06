@@ -5,6 +5,9 @@ class Statement:
     def parse_end_game(self, args):
         self.end_game = True
 
+    def parse_id(self, args):
+        self.id = int(args[0])
+
     def parse_loot(self, args):
         self.id = int(args[0])
         self.position = int(args[1]), int(args[2])
@@ -37,6 +40,7 @@ class Statement:
         types = {
             'CL' : self.parse_clear,
             'EG' : self.parse_end_game,
+            'ID' : self.parse_id,
             'LO' : self.parse_loot,
             'MO' : self.parse_move,
             'SC' : self.parse_score_change,
@@ -51,20 +55,16 @@ class Statement:
 
 class Message:
     def __init__(self):
-        self.has_setup = False
         self.is_empty = True
 
     def __init__(self, string):
-        self.has_setup = False
         self.is_empty = True
         self.statements = []
         if string:
-            statements = string[1:].split(';')
+            statements = string[0:].split(';')
             if len(statements):
                 self.is_empty = False
                 for s in statements:
                     ss = Statement(s)
                     self.statements.append(ss)
                     print(ss.type)
-                    if ss.type == 'ST':
-                        self.has_setup = True
