@@ -1,5 +1,6 @@
 import time, sys
 import pygame
+import argparse
 import asyncio
 import websockets
 
@@ -33,7 +34,9 @@ class Graphics:
 
     def pos2pixel(self, pos):
         pixel = [v * self.board_cell_size for v in pos]
-        pixel[1] = self.board_size[1] - pixel[1]
+        p = pixel[1]
+        pixel[1] = self.board_size[1] - pixel[1] - self.board_cell_size
+        print(f"board_size: {self.board_size[1]} Y: {pixel[1]} Y_BEFORE: {p}")
         return pixel
 
     def snake(self, s):
@@ -59,12 +62,11 @@ class Graphics:
         self.board.blit(self.rect, self.pos2pixel(s))
 
 class Game:
-    def __init__(self):
+    def __init__(self, net_iface):
         self.players_score = [0, 0, 0, 0]
         self.end_game = False
         pygame.init()
-#        self.network = network.Network('ws://localhost:1234')
-        self.network = network.Network('ws://192.168.0.13:1234')
+        self.network = net_iface
 
     def update_clear(self, s):
         print(s.__dict__.keys())
@@ -74,7 +76,6 @@ class Game:
         self.end_game = True
 
     def update_loot(self, s):
-        print('LOOT: ', s)
         self.graphics.loot(s)
 
     def update_score_change(self, s):
@@ -110,9 +111,6 @@ class Game:
                 updater(s)
 
     async def play(self):
-        username = "python"
-        await self.network.connect(username)
-
         clock = pygame.time.Clock()
 
         while not self.end_game:
@@ -133,11 +131,32 @@ class Game:
             if keys[pygame.K_LEFT]: await self.network.send_message("MO L;")
             if keys[pygame.K_UP]: await self.network.send_message("MO U;")
             if keys[pygame.K_DOWN]: await self.network.send_message("MO D;")
-
+            if keys[pygame.K_ESCAPE]: self.end_game = True
             self.graphics.draw()
 
         pygame.quit()
         exit()
 
-g = Game()
-asyncio.get_event_loop().run_until_complete(g.play())
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+            'Address',
+            metavar='address',
+            type=str,
+            help='address of server. For example, ws://localhost:1234')
+    parser.add_argument(
+            'Username',
+            metavar='username',
+            type=str,
+            help='username of player. For example, R2D2')
+
+    args = parser.parse_args()
+
+    net_iface = network.Network(args.Address)
+    asyncio.get_event_loop().run_until_complete(net_iface.connect(args.Username))
+
+    g = Game(net_iface=net_iface)
+    asyncio.get_event_loop().run_until_complete(g.play())
+
+if __name__ == '__main__':
+    main()
