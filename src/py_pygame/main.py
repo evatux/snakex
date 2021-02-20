@@ -7,7 +7,6 @@ import websockets
 #import network.server_log_reader as network
 import network.ws_network as network
 import message
-# import websockets
 
 GREEN = (0, 200, 0)
 RED = (200, 0, 0)
@@ -36,7 +35,6 @@ class Graphics:
         pixel = [v * self.board_cell_size for v in pos]
         p = pixel[1]
         pixel[1] = self.board_size[1] - pixel[1] - self.board_cell_size
-        print(f"board_size: {self.board_size[1]} Y: {pixel[1]} Y_BEFORE: {p}")
         return pixel
 
     def snake(self, s):
