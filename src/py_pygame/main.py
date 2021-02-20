@@ -12,23 +12,32 @@ GREEN = (0, 200, 0)
 RED = (200, 0, 0)
 BLUE = (0, 0, 200)
 YELLOW = (200, 200, 0)
+BLACK = (0, 0, 0)
+DARK_GREY = (15, 15, 15)
 
 class Graphics:
     def __init__(self, cells):
         self.board_cells = cells
         self.board_cell_size = 25
         self.board_size = [num_cells * self.board_cell_size for num_cells in self.board_cells]
-        self.info_size = (200, self.board_size[1])
-        self.screen_size = (self.board_size[0] + self.info_size[0], self.board_size[1])
+        self.info_size = (self.board_size[0], 40)
+        self.screen_size = (self.board_size[0],  self.info_size[1] + self.board_size[1])
+
         self.screen = pygame.display.set_mode(self.screen_size, flags=pygame.DOUBLEBUF)
-        self.screen.fill((15, 15, 15))
+        self.screen.fill(DARK_GREY)
+
         self.board = pygame.Surface(self.board_size)
-        self.board.fill((0, 0, 0))
+        self.board.fill(BLACK)
+
+        self.info = pygame.Surface(self.info_size)
+        self.info.fill(GREEN)
+
         self.rect = pygame.Surface((self.board_cell_size, self.board_cell_size))
 
     def draw(self):
         # FIXME: Add info
         self.screen.blit(self.board, (0, 0))
+        self.screen.blit(self.info, (0, self.board_size[1]))
         pygame.display.flip()
 
     def pos2pixel(self, pos):
