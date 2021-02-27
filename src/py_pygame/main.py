@@ -7,70 +7,13 @@ import websockets
 #import network.server_log_reader as network
 import network.ws_network as network
 import message
-
-GREEN = (0, 200, 0)
-RED = (200, 0, 0)
-BLUE = (0, 0, 200)
-YELLOW = (200, 200, 0)
-BLACK = (0, 0, 0)
-DARK_GREY = (15, 15, 15)
-
-class Graphics:
-    def __init__(self, cells):
-        self.board_cells = cells
-        self.board_cell_size = 25
-        self.board_size = [num_cells * self.board_cell_size for num_cells in self.board_cells]
-        self.info_size = (self.board_size[0], 40)
-        self.screen_size = (self.board_size[0],  self.info_size[1] + self.board_size[1])
-
-        self.screen = pygame.display.set_mode(self.screen_size, flags=pygame.DOUBLEBUF)
-        self.screen.fill(DARK_GREY)
-
-        self.board = pygame.Surface(self.board_size)
-        self.board.fill(BLACK)
-
-        self.info = pygame.Surface(self.info_size)
-        self.info.fill(GREEN)
-
-        self.rect = pygame.Surface((self.board_cell_size, self.board_cell_size))
-
-    def draw(self):
-        # FIXME: Add info
-        self.screen.blit(self.board, (0, 0))
-        self.screen.blit(self.info, (0, self.board_size[1]))
-        pygame.display.flip()
-
-    def pos2pixel(self, pos):
-        pixel = [v * self.board_cell_size for v in pos]
-        p = pixel[1]
-        pixel[1] = self.board_size[1] - pixel[1] - self.board_cell_size
-        return pixel
-
-    def snake(self, s):
-        if s.id == 0:
-            color = GREEN
-        elif s.id == 1:
-            color = RED
-        elif s.id == 2:
-            color = BLUE
-        elif s.id == 4:
-            color = YELLOW
-        # FIXME: Dispatch between body and head
-        self.rect.fill(color)
-        self.board.blit(self.rect, self.pos2pixel(s.position))
-
-    def loot(self, s):
-        # FIXME: s.id
-        self.rect.fill((200, 200, 200))
-        self.board.blit(self.rect, self.pos2pixel(s.position))
-
-    def clear(self, s):
-        self.rect.fill((0, 0, 0))
-        self.board.blit(self.rect, self.pos2pixel(s))
+import interface.graphics as graphics
 
 class Game:
     def __init__(self, net_iface):
-        self.players_score = [0, 0, 0, 0]
+        self.players_scores = [0, 0, 0, 0]
+        self.players_names = ['AAAA', 'BBBB', 'CCCC', 'DDDD']
+        self.start_game = False
         self.end_game = False
         pygame.init()
         self.network = net_iface
@@ -86,7 +29,7 @@ class Game:
         self.graphics.loot(s)
 
     def update_score_change(self, s):
-        self.players_score[s.id] = s.score
+        self.players_scores[s.id] = s.score
 
     def update_snake(self, s):
         self.graphics.snake(s)
@@ -95,7 +38,13 @@ class Game:
         self.id = s.id
 
     def setup_graphics(self, s):
-        self.graphics = Graphics(s.cells)
+        self.graphics = graphics.Graphics(s.cells)
+        self.start_game = True
+
+    def update_player_name(self, s):
+        print(f"UPDATE_PLAYER_NAME {s.id} {s.name}")
+        self.players_scores[s.id] = 0
+        self.players_names[s.id] = s.name
 
     def update_state(self, msg):
         print(msg)
@@ -106,6 +55,7 @@ class Game:
                 'ID' : self.set_id,
                 'LO' : self.update_loot,
                 # 'MO' : self.update_move,
+                'NA' : self.update_player_name,
                 'SC' : self.update_score_change,
                 'ST' : self.setup_graphics,
                 'SN' : self.update_snake,
@@ -119,6 +69,11 @@ class Game:
 
     async def play(self):
         clock = pygame.time.Clock()
+
+        while not self.start_game:
+            recv, msg = await self.network.get_message()
+            if recv:
+                self.update_state(msg)
 
         while not self.end_game:
             clock.tick(20)
@@ -139,6 +94,8 @@ class Game:
             if keys[pygame.K_UP]: await self.network.send_message("MO U;")
             if keys[pygame.K_DOWN]: await self.network.send_message("MO D;")
             if keys[pygame.K_ESCAPE]: self.end_game = True
+
+            self.graphics.draw_info(self.players_scores, self.players_names)
             self.graphics.draw()
 
         pygame.quit()
