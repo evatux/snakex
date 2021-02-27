@@ -20,9 +20,6 @@ class Network(BaseClass):
         print("@@@ client: %s" % send_ack)
         await self.ws.send(send_ack)
 
-        names_str = await self.ws.recv()
-        print("@@@ server: %s" % names_str)
-
     async def get_message(self):
         if self.task is None:
             self.task = asyncio.create_task(self.ws.recv())

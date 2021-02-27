@@ -43,6 +43,7 @@ class Statement:
             'ID' : self.parse_id,
             'LO' : self.parse_loot,
             'MO' : self.parse_move,
+            'NA' : self.parse_name,
             'SC' : self.parse_score_change,
             'ST' : self.parse_setup,
             'SN' : self.parse_snake,
