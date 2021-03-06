@@ -105,7 +105,7 @@ void GameServer::processClientMessage(int id, const proto::message_t &message) {
 void GameServer::startGame() {
     broadcastMessage(start_message_);
     broadcastMessage(game_->state_message());
-    timer_->start(500);
+    timer_->start(150);
 }
 
 void GameServer::stopGame() {
