@@ -76,7 +76,7 @@ class Game:
                 self.update_state(msg)
 
         while not self.end_game:
-            clock.tick(20)
+            clock.tick(200)
 
             recv, msg = await self.network.get_message()
             if recv:
