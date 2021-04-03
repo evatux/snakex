@@ -5,6 +5,7 @@ RED = (200, 0, 0)
 BLUE = (0, 0, 200)
 YELLOW = (200, 200, 0)
 BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 DARK_GREY = (35, 35, 35)
 LIGHT_GREY = (200, 200, 200)
 
@@ -42,7 +43,6 @@ class Graphics:
         # self.game_window.append(board, 'b');
 
     def draw(self):
-        # FIXME: Add info
         self.screen.blit(self.board, (0, 0))
         self.screen.blit(self.info, (0, self.board_size[1]))
         pygame.display.flip()
@@ -54,13 +54,14 @@ class Graphics:
         return pixel
 
     def snake(self, s):
+        color = WHITE
         if s.id == 0:
             color = GREEN
         elif s.id == 1:
             color = RED
         elif s.id == 2:
             color = BLUE
-        elif s.id == 4:
+        elif s.id == 3:
             color = YELLOW
         # FIXME: Dispatch between body and head
         self.rect.fill(color)
