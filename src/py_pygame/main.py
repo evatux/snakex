@@ -107,12 +107,14 @@ def main():
             'Address',
             metavar='address',
             type=str,
-            help='address of server. For example, ws://localhost:1234')
+            help='address of server. For example, ws://localhost:1234',
+            default="ws://localhost:1234")
     parser.add_argument(
             'Username',
             metavar='username',
             type=str,
-            help='username of player. For example, R2D2')
+            help='username of player. For example, R2D2',
+            default='R2D2')
 
     args = parser.parse_args()
 
