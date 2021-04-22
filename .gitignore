@@ -1,2 +1,7 @@
+# js
 /src/js_html_client/docker/tmp/
 /src/js_html_client/docker/var/
+
+# rust
+/src/rust_client/Cargo.lock
+/src/rust_client/target

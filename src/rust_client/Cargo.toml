@@ -1,0 +1,9 @@
+[package]
+name = "snakex"
+version = "0.1.0"
+authors = ["eva"]
+
+[dependencies]
+rand = "*"
+termion = "*"
+websocket = "*"
